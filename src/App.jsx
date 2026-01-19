@@ -1,96 +1,200 @@
 import { useState, useRef, useCallback } from 'react';
 import Camera from './components/Camera';
-import FrameSelector from './components/FrameSelector';
-import FilterSelector from './components/FilterSelector';
-import ModeSelector from './components/ModeSelector';
-import CameraSettings from './components/CameraSettings';
+import LayoutSelector, { layouts } from './components/LayoutSelector';
+import DelaySelector from './components/DelaySelector';
+import PhotoThumbnails from './components/PhotoThumbnails';
 import Countdown from './components/Countdown';
-import PhotoPreview from './components/PhotoPreview';
 import StripPreview from './components/StripPreview';
+
+// Filter options matching BeautyPlus style
+const filters = [
+  { id: 'normal', name: 'Normal', css: '' },
+  { id: 'bw', name: 'BW', css: 'grayscale(100%)' },
+  { id: 'vintage', name: 'Vintage', css: 'sepia(50%) contrast(90%) brightness(90%)' },
+  { id: 'oldphoto', name: 'Old Photo', css: 'sepia(80%) contrast(80%) brightness(85%)' },
+  { id: 'amber', name: 'Amber', css: 'sepia(40%) saturate(150%) hue-rotate(-10deg)' },
+  { id: 'nocturne', name: 'Nocturne', css: 'saturate(110%) hue-rotate(20deg) brightness(90%) contrast(110%)' },
+  { id: 'vivid', name: 'Vivid', css: 'saturate(180%) contrast(110%)' },
+  { id: 'cool', name: 'Cool', css: 'saturate(110%) hue-rotate(20deg) brightness(105%)' },
+];
 
 function App() {
   const cameraRef = useRef(null);
+  const fileInputRef = useRef(null);
 
-  const [selectedFrame, setSelectedFrame] = useState(null);
-  const [selectedFilter, setSelectedFilter] = useState('');
-  const [isCountingDown, setIsCountingDown] = useState(false);
-  const [capturedPhoto, setCapturedPhoto] = useState(null);
-  const [isCameraReady, setIsCameraReady] = useState(false);
-  const [showFlash, setShowFlash] = useState(false);
+  // Layout & Settings
+  const [selectedLayout, setSelectedLayout] = useState('4v');
+  const [countdownTime, setCountdownTime] = useState(3);
+  const [selectedFilter, setSelectedFilter] = useState('normal');
 
-  const [photoMode, setPhotoMode] = useState('single');
+  // Camera state
   const [facingMode, setFacingMode] = useState('user');
   const [isMirrored, setIsMirrored] = useState(true);
-  const [countdownTime, setCountdownTime] = useState(3);
+  const [isCameraReady, setIsCameraReady] = useState(false);
 
-  const [stripPhotos, setStripPhotos] = useState([]);
-  const [stripCount, setStripCount] = useState(0);
+  // Capture state
+  const [isCountingDown, setIsCountingDown] = useState(false);
+  const [showFlash, setShowFlash] = useState(false);
+  const [photos, setPhotos] = useState([]);
+  const [activePhotoIndex, setActivePhotoIndex] = useState(0);
+  const [isCapturing, setIsCapturing] = useState(false);
+
+  // Preview state
   const [showStripPreview, setShowStripPreview] = useState(false);
 
-  const handleCapture = useCallback(() => {
+  // Get current layout config
+  const currentLayout = layouts.find(l => l.id === selectedLayout) || layouts[2];
+  const currentFilter = filters.find(f => f.id === selectedFilter) || filters[0];
+
+  // Start capture sequence
+  const handleStartCapture = useCallback(() => {
     if (!isCameraReady || isCountingDown) return;
 
+    setIsCapturing(true);
+    setPhotos([]);
+    setActivePhotoIndex(0);
+
     if (countdownTime === 0) {
-      performCapture();
+      performCapture(0);
     } else {
       setIsCountingDown(true);
     }
   }, [isCameraReady, isCountingDown, countdownTime]);
 
-  const performCapture = useCallback(() => {
+  // Capture single photo
+  const performCapture = useCallback((index) => {
     setShowFlash(true);
     setTimeout(() => setShowFlash(false), 300);
 
     if (cameraRef.current) {
       const photo = cameraRef.current.capturePhoto();
       if (photo) {
-        if (photoMode === 'strip') {
-          const newPhotos = [...stripPhotos, photo];
-          setStripPhotos(newPhotos);
-          setStripCount(newPhotos.length);
+        setPhotos(prev => {
+          const newPhotos = [...prev];
+          newPhotos[index] = photo;
+          return newPhotos;
+        });
 
-          if (newPhotos.length >= 4) {
-            setShowStripPreview(true);
-          }
+        // Check if we have more photos to take
+        const nextIndex = index + 1;
+        if (nextIndex < currentLayout.count) {
+          setActivePhotoIndex(nextIndex);
+
+          // Start countdown for next photo
+          setTimeout(() => {
+            if (countdownTime > 0) {
+              setIsCountingDown(true);
+            } else {
+              performCapture(nextIndex);
+            }
+          }, 1000);
         } else {
-          setCapturedPhoto(photo);
+          // All photos taken
+          setIsCapturing(false);
         }
       }
     }
-  }, [photoMode, stripPhotos]);
+  }, [currentLayout.count, countdownTime]);
 
+  // Countdown complete
   const handleCountdownComplete = useCallback(() => {
-    performCapture();
     setIsCountingDown(false);
+    performCapture(activePhotoIndex);
+  }, [performCapture, activePhotoIndex]);
 
-    if (photoMode === 'strip' && stripPhotos.length < 3) {
-      setTimeout(() => {
-        if (countdownTime > 0) {
-          setIsCountingDown(true);
-        } else {
-          performCapture();
-        }
-      }, 1000);
+  // Retake specific photo
+  const handleRetakePhoto = useCallback((index) => {
+    if (isCountingDown) return;
+
+    setActivePhotoIndex(index);
+    setIsCapturing(true);
+
+    if (countdownTime === 0) {
+      performCapture(index);
+    } else {
+      setIsCountingDown(true);
     }
-  }, [performCapture, photoMode, stripPhotos.length, countdownTime]);
+  }, [countdownTime, isCountingDown, performCapture]);
 
-  const handleRetake = useCallback(() => {
-    setCapturedPhoto(null);
-    setStripPhotos([]);
-    setStripCount(0);
+  // Handle upload photo
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileUpload = useCallback((event) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    const loadedPhotos = [];
+    let loadedCount = 0;
+    const filesToLoad = Math.min(files.length, currentLayout.count);
+
+    for (let i = 0; i < filesToLoad; i++) {
+      const file = files[i];
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 640;
+        canvas.height = 480;
+        const ctx = canvas.getContext('2d');
+
+        // Calculate aspect ratio crop
+        const srcRatio = img.width / img.height;
+        const dstRatio = 640 / 480;
+        let srcX = 0, srcY = 0, srcW = img.width, srcH = img.height;
+
+        if (srcRatio > dstRatio) {
+          srcW = img.height * dstRatio;
+          srcX = (img.width - srcW) / 2;
+        } else {
+          srcH = img.width / dstRatio;
+          srcY = (img.height - srcH) / 2;
+        }
+
+        ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, 640, 480);
+        loadedPhotos[i] = canvas;
+        loadedCount++;
+
+        if (loadedCount === filesToLoad) {
+          setPhotos(loadedPhotos);
+          setIsCapturing(false);
+        }
+      };
+      img.src = URL.createObjectURL(file);
+    }
+
+    event.target.value = '';
+  }, [currentLayout.count]);
+
+  // Next button - show preview
+  const handleNext = useCallback(() => {
+    if (photos.length === currentLayout.count) {
+      setShowStripPreview(true);
+    }
+  }, [photos.length, currentLayout.count]);
+
+  // Retake all
+  const handleRetakeAll = useCallback(() => {
+    setPhotos([]);
+    setActivePhotoIndex(0);
+    setIsCapturing(false);
     setShowStripPreview(false);
   }, []);
 
+  // Close preview
   const handleClosePreview = useCallback(() => {
-    setCapturedPhoto(null);
     setShowStripPreview(false);
   }, []);
 
-  const handleModeChange = useCallback((mode) => {
-    setPhotoMode(mode);
-    setStripPhotos([]);
-    setStripCount(0);
+  // Change layout
+  const handleLayoutChange = useCallback((layoutId) => {
+    setSelectedLayout(layoutId);
+    setPhotos([]);
+    setActivePhotoIndex(0);
+    setIsCapturing(false);
   }, []);
+
+  const allPhotosTaken = photos.length === currentLayout.count && photos.every(p => p);
 
   return (
     <div className="app-container">
@@ -100,6 +204,32 @@ function App() {
         <p className="app-subtitle">Capture your best moments ✨</p>
       </header>
 
+      {/* Top Controls Bar */}
+      <div className="top-controls" style={{ padding: '0 12px' }}>
+        <div className="top-controls-left">
+          <LayoutSelector
+            selectedLayout={selectedLayout}
+            onSelectLayout={handleLayoutChange}
+          />
+          <DelaySelector
+            selectedDelay={countdownTime}
+            onSelectDelay={setCountdownTime}
+          />
+        </div>
+        <button className="upload-btn" onClick={handleUploadClick}>
+          <span>🖼️</span>
+          Upload Photo
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          style={{ display: 'none' }}
+          onChange={handleFileUpload}
+        />
+      </div>
+
       {/* Main Layout */}
       <main className="app-main">
         {/* Camera Section */}
@@ -107,16 +237,17 @@ function App() {
           <div className="camera-area">
             <Camera
               ref={cameraRef}
-              selectedFrame={selectedFrame}
-              selectedFilter={selectedFilter}
+              selectedFilter={currentFilter.css}
               facingMode={facingMode}
               isMirrored={isMirrored}
               onStreamReady={setIsCameraReady}
             />
 
-            {/* Strip Counter */}
-            {photoMode === 'strip' && stripCount > 0 && !showStripPreview && (
-              <div className="strip-badge">📸 {stripCount}/4</div>
+            {/* Photo Counter Badge */}
+            {isCapturing && (
+              <div className="strip-badge">
+                📸 {photos.filter(p => p).length}/{currentLayout.count}
+              </div>
             )}
 
             <Countdown
@@ -128,56 +259,91 @@ function App() {
             {showFlash && <div className="flash-effect" />}
           </div>
 
-          {/* Capture Controls */}
-          <div className="capture-controls">
-            {photoMode === 'strip' && stripCount > 0 && !showStripPreview && (
-              <button onClick={handleRetake} className="reset-btn">↺</button>
-            )}
+          {/* Filter Bar */}
+          <div className="filter-bar">
+            <span style={{
+              color: 'var(--text-dim)',
+              fontSize: '11px',
+              paddingRight: '8px',
+              flexShrink: 0
+            }}>
+              Choose a filter
+            </span>
+            {filters.map((filter) => (
+              <button
+                key={filter.id}
+                className={`filter-pill ${selectedFilter === filter.id ? 'active' : ''}`}
+                onClick={() => setSelectedFilter(filter.id)}
+              >
+                {filter.name}
+              </button>
+            ))}
+          </div>
 
-            <button
-              onClick={handleCapture}
-              disabled={!isCameraReady || isCountingDown || (photoMode === 'strip' && stripCount >= 4)}
-              className="capture-btn"
-            >
-              {photoMode === 'strip' ? '🎞️' : '📷'}
-            </button>
+          {/* Action Buttons */}
+          <div style={{ padding: '0 4px' }}>
+            {!allPhotosTaken ? (
+              <button
+                onClick={handleStartCapture}
+                disabled={!isCameraReady || isCountingDown}
+                className="start-capture-btn"
+              >
+                <span className="btn-icon">📷</span>
+                Start Capture
+              </button>
+            ) : (
+              <button onClick={handleNext} className="next-btn">
+                Next
+                <span>→</span>
+              </button>
+            )}
           </div>
         </section>
 
-        {/* Controls Panel */}
-        <aside className="controls-panel">
-          <ModeSelector mode={photoMode} onModeChange={handleModeChange} />
-          <FrameSelector selectedFrame={selectedFrame} onSelectFrame={setSelectedFrame} />
-          <FilterSelector selectedFilter={selectedFilter} onSelectFilter={setSelectedFilter} />
-          <CameraSettings
-            facingMode={facingMode}
-            onToggleFacingMode={() => setFacingMode(f => f === 'user' ? 'environment' : 'user')}
-            isMirrored={isMirrored}
-            onToggleMirror={() => setIsMirrored(m => !m)}
-            countdownTime={countdownTime}
-            onCountdownChange={setCountdownTime}
-          />
-        </aside>
+        {/* Photo Thumbnails Sidebar */}
+        {(isCapturing || photos.length > 0) && (
+          <aside style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+            paddingBottom: '16px'
+          }}>
+            <PhotoThumbnails
+              photos={photos}
+              photoCount={currentLayout.count}
+              activeIndex={activePhotoIndex}
+              onSelectPhoto={handleRetakePhoto}
+              filter={currentFilter.css}
+            />
+            {photos.length > 0 && (
+              <button
+                onClick={handleRetakeAll}
+                style={{
+                  width: '80px',
+                  padding: '8px',
+                  fontSize: '10px',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '8px',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer'
+                }}
+              >
+                ↺ Retake All
+              </button>
+            )}
+          </aside>
+        )}
       </main>
 
-      {/* Modals */}
-      {capturedPhoto && (
-        <PhotoPreview
-          photoCanvas={capturedPhoto}
-          selectedFrame={selectedFrame}
-          selectedFilter={selectedFilter}
-          onClose={handleClosePreview}
-          onRetake={handleRetake}
-        />
-      )}
-
+      {/* Strip Preview Modal */}
       {showStripPreview && (
         <StripPreview
-          photos={stripPhotos}
-          selectedFrame={selectedFrame}
-          selectedFilter={selectedFilter}
+          photos={photos}
+          layout={currentLayout}
+          selectedFilter={currentFilter.css}
           onClose={handleClosePreview}
-          onRetake={handleRetake}
+          onRetake={handleRetakeAll}
         />
       )}
     </div>
