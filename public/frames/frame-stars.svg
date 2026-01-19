@@ -1,0 +1,42 @@
+<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+  <!-- Stars frame -->
+  <defs>
+    <linearGradient id="starGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700"/>
+      <stop offset="100%" style="stop-color:#FFA500"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Star polygon helper -->
+  <!-- Top row stars -->
+  <polygon points="30,5 33,15 44,15 35,22 38,33 30,26 22,33 25,22 16,15 27,15" fill="url(#starGrad)"/>
+  <polygon points="80,10 82,17 90,17 84,22 86,30 80,25 74,30 76,22 70,17 78,17" fill="url(#starGrad)" opacity="0.7"/>
+  <polygon points="130,5 133,15 144,15 135,22 138,33 130,26 122,33 125,22 116,15 127,15" fill="url(#starGrad)"/>
+  <polygon points="180,10 182,17 190,17 184,22 186,30 180,25 174,30 176,22 170,17 178,17" fill="url(#starGrad)" opacity="0.7"/>
+  <polygon points="230,5 233,15 244,15 235,22 238,33 230,26 222,33 225,22 216,15 227,15" fill="url(#starGrad)"/>
+  <polygon points="280,10 282,17 290,17 284,22 286,30 280,25 274,30 276,22 270,17 278,17" fill="url(#starGrad)" opacity="0.7"/>
+  <polygon points="330,5 333,15 344,15 335,22 338,33 330,26 322,33 325,22 316,15 327,15" fill="url(#starGrad)"/>
+  <polygon points="380,10 382,17 390,17 384,22 386,30 380,25 374,30 376,22 370,17 378,17" fill="url(#starGrad)" opacity="0.7"/>
+  
+  <!-- Bottom row stars -->
+  <polygon points="30,295 33,285 44,285 35,278 38,267 30,274 22,267 25,278 16,285 27,285" fill="url(#starGrad)"/>
+  <polygon points="80,290 82,283 90,283 84,278 86,270 80,275 74,270 76,278 70,283 78,283" fill="url(#starGrad)" opacity="0.7"/>
+  <polygon points="130,295 133,285 144,285 135,278 138,267 130,274 122,267 125,278 116,285 127,285" fill="url(#starGrad)"/>
+  <polygon points="180,290 182,283 190,283 184,278 186,270 180,275 174,270 176,278 170,283 178,283" fill="url(#starGrad)" opacity="0.7"/>
+  <polygon points="230,295 233,285 244,285 235,278 238,267 230,274 222,267 225,278 216,285 227,285" fill="url(#starGrad)"/>
+  <polygon points="280,290 282,283 290,283 284,278 286,270 280,275 274,270 276,278 270,283 278,283" fill="url(#starGrad)" opacity="0.7"/>
+  <polygon points="330,295 333,285 344,285 335,278 338,267 330,274 322,267 325,278 316,285 327,285" fill="url(#starGrad)"/>
+  <polygon points="380,290 382,283 390,283 384,278 386,270 380,275 374,270 376,278 370,283 378,283" fill="url(#starGrad)" opacity="0.7"/>
+  
+  <!-- Left column stars -->
+  <polygon points="15,60 18,70 29,70 20,77 23,88 15,81 7,88 10,77 1,70 12,70" fill="url(#starGrad)" opacity="0.8"/>
+  <polygon points="15,120 18,130 29,130 20,137 23,148 15,141 7,148 10,137 1,130 12,130" fill="url(#starGrad)"/>
+  <polygon points="15,180 18,190 29,190 20,197 23,208 15,201 7,208 10,197 1,190 12,190" fill="url(#starGrad)" opacity="0.8"/>
+  <polygon points="15,240 18,250 29,250 20,257 23,268 15,261 7,268 10,257 1,250 12,250" fill="url(#starGrad)"/>
+  
+  <!-- Right column stars -->
+  <polygon points="385,60 388,70 399,70 390,77 393,88 385,81 377,88 380,77 371,70 382,70" fill="url(#starGrad)" opacity="0.8"/>
+  <polygon points="385,120 388,130 399,130 390,137 393,148 385,141 377,148 380,137 371,130 382,130" fill="url(#starGrad)"/>
+  <polygon points="385,180 388,190 399,190 390,197 393,208 385,201 377,208 380,197 371,190 382,190" fill="url(#starGrad)" opacity="0.8"/>
+  <polygon points="385,240 388,250 399,250 390,257 393,268 385,261 377,268 380,257 371,250 382,250" fill="url(#starGrad)"/>
+</svg>

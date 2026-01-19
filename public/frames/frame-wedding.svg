@@ -1,0 +1,27 @@
+<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+  <!-- Wedding frame -->
+  <defs>
+    <linearGradient id="weddingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700"/>
+      <stop offset="50%" style="stop-color:#FFFACD"/>
+      <stop offset="100%" style="stop-color:#FFD700"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Elegant double border -->
+  <rect x="8" y="8" width="384" height="284" fill="none" stroke="url(#weddingGrad)" stroke-width="3" rx="5"/>
+  <rect x="18" y="18" width="364" height="264" fill="none" stroke="url(#weddingGrad)" stroke-width="1" rx="3"/>
+  
+  <!-- Corner flourishes -->
+  <path d="M 25 25 Q 40 15 55 25 Q 45 35 55 45 Q 40 35 25 45 Q 35 35 25 25" fill="url(#weddingGrad)" opacity="0.8"/>
+  <path d="M 375 25 Q 360 15 345 25 Q 355 35 345 45 Q 360 35 375 45 Q 365 35 375 25" fill="url(#weddingGrad)" opacity="0.8"/>
+  <path d="M 25 275 Q 40 285 55 275 Q 45 265 55 255 Q 40 265 25 255 Q 35 265 25 275" fill="url(#weddingGrad)" opacity="0.8"/>
+  <path d="M 375 275 Q 360 285 345 275 Q 355 265 345 255 Q 360 265 375 255 Q 365 265 375 275" fill="url(#weddingGrad)" opacity="0.8"/>
+  
+  <!-- Wedding rings at top center -->
+  <circle cx="190" cy="20" r="12" fill="none" stroke="url(#weddingGrad)" stroke-width="3"/>
+  <circle cx="210" cy="20" r="12" fill="none" stroke="url(#weddingGrad)" stroke-width="3"/>
+  
+  <!-- Heart at bottom -->
+  <path d="M 200 280 C 200 270, 215 270, 215 280 C 215 290, 200 300, 200 300 C 200 300, 185 290, 185 280 C 185 270, 200 270, 200 280" fill="url(#weddingGrad)"/>
+</svg>
